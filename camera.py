@@ -1,6 +1,8 @@
 import cv2
 import time
 from detect import classify_image, prepare_interpreter
+import logging
+from datetime import datetime
 
 PREVIEW_WINDOW_NAME = 'preview'
 PREVIEW_WINDOW_SIZE = (960, 540)
@@ -50,6 +52,12 @@ def display_results(frame, results, labels, preview):
         display_frame_in_prev_window(frame, label)
 
 
+def log_message(is_preview):
+    logging.debug("Frame captured on ${datetime.now()}")
+    if not is_preview:
+        logging.info("Frame...")
+
+
 def capture(workdir, device=0, preview=True):
     vc = cv2.VideoCapture(device)
 
@@ -66,5 +74,6 @@ def capture(workdir, device=0, preview=True):
         write_frame_to_file(frame, results, workdir)
         display_results(frame, results, labels, preview)
         rval = check_for_exit()
+        log_message(preview)
 
     cv2.destroyWindow(PREVIEW_WINDOW_NAME)
