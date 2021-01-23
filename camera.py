@@ -59,6 +59,8 @@ def log_message(is_preview):
 
 
 def capture(workdir, device=0, preview=True):
+    logging.info("Initializing capture device: $device")
+
     vc = cv2.VideoCapture(device)
 
     if preview:
@@ -66,6 +68,7 @@ def capture(workdir, device=0, preview=True):
 
     rval, frame = vc.read() if vc.isOpened() else [False, None]  # try to get the first frame
     interpreter, labels = prepare_interpreter()
+    logging.debug("Tensorflow interpreter ready...")
 
     while rval:
         rval, frame = vc.read()
