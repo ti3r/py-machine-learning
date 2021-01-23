@@ -9,4 +9,4 @@ def run():
 if __name__ == "__main__":
     arguments = parse_arguments()
     # print(arguments.image)
-    capture(arguments.workdir, arguments.device)
+    capture(arguments.workdir, arguments.device, not arguments.headless)
