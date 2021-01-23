@@ -1,9 +1,8 @@
 from arguments import parse_arguments
 from camera import capture
+import logging
 
-
-def run():
-    print("Hello World!!!")
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.DEBUG)
 
 
 if __name__ == "__main__":

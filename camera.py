@@ -76,7 +76,7 @@ def capture(workdir, device=0, preview=True):
         results = classify_image(interpreter, ml_frame)
         write_frame_to_file(frame, results, workdir)
         display_results(frame, results, labels, preview)
-        rval = check_for_exit()
         log_message(preview)
+        rval = check_for_exit()
 
     cv2.destroyWindow(PREVIEW_WINDOW_NAME)
