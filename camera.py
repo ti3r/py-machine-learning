@@ -4,6 +4,7 @@ from detect import classify_image, prepare_interpreter
 import logging
 from datetime import datetime
 
+MIN_FRAME_PROB = 0.5
 PREVIEW_WINDOW_NAME = 'preview'
 PREVIEW_WINDOW_SIZE = (960, 540)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -17,12 +18,12 @@ def current_milli_time():
     return int(round(time.time() * 1000))
 
 
-def check_for_exit():
+def check_for_exit(preview):
     key = cv2.waitKey(5)
     if key == 27:  # exit on ESC
         return False
 
-    if cv2.getWindowProperty(PREVIEW_WINDOW_NAME, cv2.WND_PROP_VISIBLE) == 0:
+    if preview and cv2.getWindowProperty(PREVIEW_WINDOW_NAME, cv2.WND_PROP_VISIBLE) == 0:
         return False
 
     return True
@@ -36,7 +37,7 @@ def display_frame_in_prev_window(frame, text):
 
 def write_frame_to_file(frame, results, workdir):
     label_id, prob = results[0]
-    if prob > 0.5:
+    if prob > MIN_FRAME_PROB:
         cv2.imwrite('{workdir}/frame{num}.jpg'.format(workdir=workdir, num=current_milli_time())
                     , frame)
 
@@ -44,22 +45,22 @@ def write_frame_to_file(frame, results, workdir):
 def display_results(frame, results, labels, preview):
     label_id, prob = results[0]
     label = ""
-    if prob > 0.5:
+    if prob > MIN_FRAME_PROB:
         label = labels[label_id]
-        print('label_id: {label}, label: {lab}, prob: {prob}, '.format(label=label_id, prob=prob, lab=label))
+        logging.info('label_id: {label}, label: {lab}, prob: {prob}, '.format(label=label_id, prob=prob, lab=label))
 
     if preview:
         display_frame_in_prev_window(frame, label)
 
 
 def log_message(is_preview):
-    logging.debug("Frame captured on ${datetime.now()}")
+    logging.debug(f'Frame captured on {datetime.now()}')
     if not is_preview:
         logging.info("Frame...")
 
 
 def capture(workdir, device=0, preview=True):
-    logging.info("Initializing capture device: $device")
+    logging.info(f'Initializing capture device: {device}')
 
     vc = cv2.VideoCapture(device)
 
@@ -77,6 +78,6 @@ def capture(workdir, device=0, preview=True):
         write_frame_to_file(frame, results, workdir)
         display_results(frame, results, labels, preview)
         log_message(preview)
-        rval = check_for_exit()
+        rval = check_for_exit(preview)
 
     cv2.destroyWindow(PREVIEW_WINDOW_NAME)
