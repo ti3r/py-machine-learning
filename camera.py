@@ -36,21 +36,20 @@ def display_frame_in_prev_window(frame, text):
 
 
 def write_frame_to_file(frame, results, workdir):
-    label_id, prob = results[0]
-    if prob > MIN_FRAME_PROB:
-        cv2.imwrite('{workdir}/frame{num}.jpg'.format(workdir=workdir, num=current_milli_time())
-                    , frame)
+    for result in results:
+        label, prob = result
+        if prob > MIN_FRAME_PROB:
+            num = current_milli_time()
+            cv2.imwrite('{workdir}/frame{num}.jpg'.format(workdir=workdir, num=num), frame)
 
 
-def display_results(frame, results, labels, preview):
-    label_id, prob = results[0]
-    label = ""
-    if prob > MIN_FRAME_PROB:
-        label = labels[label_id]
-        logging.info('label_id: {label}, label: {lab}, prob: {prob}, '.format(label=label_id, prob=prob, lab=label))
+def display_results(frame, results, preview):
+    for result in results:
+        label, prob = result
+        logging.info('label_id: {label}, label: {lab}, prob: {prob}, '.format(label=label, prob=prob, lab=label))
 
     if preview:
-        display_frame_in_prev_window(frame, label)
+        display_frame_in_prev_window(frame, '')
 
 
 def log_message(is_preview):
@@ -68,15 +67,15 @@ def capture(workdir, device=0, preview=True):
         cv2.namedWindow(PREVIEW_WINDOW_NAME)
 
     rval, frame = vc.read() if vc.isOpened() else [False, None]  # try to get the first frame
-    interpreter, labels = prepare_interpreter()
+    interpreter, labels, dimentions = prepare_interpreter()
     logging.debug("Tensorflow interpreter ready...")
 
     while rval:
         rval, frame = vc.read()
-        ml_frame = cv2.resize(frame, (224, 224))
-        results = classify_image(interpreter, ml_frame)
+        ml_frame = cv2.resize(frame, (dimentions[0], dimentions[1]))
+        results = classify_image(interpreter, ml_frame, labels, MIN_FRAME_PROB, top_k=5)
         write_frame_to_file(frame, results, workdir)
-        display_results(frame, results, labels, preview)
+        display_results(frame, results, preview)
         log_message(preview)
         rval = check_for_exit(preview)
 
