@@ -33,17 +33,13 @@ def classify_image(interpreter, image, labels, min_prob, top_k=1):
     output_details = interpreter.get_output_details()[0]
     output = np.squeeze(interpreter.get_tensor(output_details['index']))
 
-    logging.debug(f"classify_output: {output}")
     # If the model is quantized (uint8 data), then dequantize the results
     if output_details['dtype'] == np.uint8:
         scale, zero_point = output_details['quantization']
         output = scale * (output - zero_point)
 
     ordered = np.argpartition(-output, top_k)
-    image_classification = [(i, output[i]) for i in ordered[:top_k]]
-    results = []
-    for t in image_classification:
-        prob = t[1]
-        if prob > min_prob:
-            results.append((labels[t[0]], prob))
+    image_classification = [(labels[i], output[i]) for i in ordered[:top_k]]
+    logging.debug(f"classify results: {image_classification}")
+    results = list(filter(lambda res: res[1] > min_prob, image_classification))
     return results

@@ -4,7 +4,7 @@ from detect import classify_image, prepare_interpreter
 import logging
 from datetime import datetime
 
-MIN_FRAME_PROB = 0.5
+MIN_FRAME_PROB = 0.75
 PREVIEW_WINDOW_NAME = 'preview'
 PREVIEW_WINDOW_SIZE = (960, 540)
 FONT = cv2.FONT_HERSHEY_SIMPLEX
@@ -40,13 +40,13 @@ def write_frame_to_file(frame, results, workdir):
         label, prob = result
         if prob > MIN_FRAME_PROB:
             num = current_milli_time()
-            cv2.imwrite('{workdir}/frame{num}.jpg'.format(workdir=workdir, num=num), frame)
+            cv2.imwrite('{workdir}/frame{num}-{lab}.jpg'.format(workdir=workdir, num=num, lab=label), frame)
 
 
 def display_results(frame, results, preview):
     for result in results:
         label, prob = result
-        logging.info('label_id: {label}, label: {lab}, prob: {prob}, '.format(label=label, prob=prob, lab=label))
+        logging.info('label: {lab}, prob: {prob}, '.format(lab=label, prob=prob))
 
     if preview:
         display_frame_in_prev_window(frame, '')
@@ -56,6 +56,13 @@ def log_message(is_preview):
     logging.debug(f'Frame captured on {datetime.now()}')
     if not is_preview:
         logging.info("Frame...")
+
+
+def process_image(interpreter, frame, ml_frame, labels, workdir, preview):
+    results = classify_image(interpreter, ml_frame, labels, MIN_FRAME_PROB, top_k=5)
+    write_frame_to_file(frame, results, workdir)
+    log_message(preview)
+    display_results(frame, results, preview)
 
 
 def capture(workdir, device=0, preview=True):
@@ -73,10 +80,7 @@ def capture(workdir, device=0, preview=True):
     while rval:
         rval, frame = vc.read()
         ml_frame = cv2.resize(frame, (dimentions[0], dimentions[1]))
-        results = classify_image(interpreter, ml_frame, labels, MIN_FRAME_PROB, top_k=5)
-        write_frame_to_file(frame, results, workdir)
-        display_results(frame, results, preview)
-        log_message(preview)
+        process_image(interpreter, frame, ml_frame, labels, workdir, preview)
         rval = check_for_exit(preview)
 
     cv2.destroyWindow(PREVIEW_WINDOW_NAME)

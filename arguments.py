@@ -13,5 +13,9 @@ def parse_arguments():
 
     parser.add_argument('-l', '--lower-limit', type=float,
                         help='probability lower limit to detect an object and capture a frame')
+
+    parser.add_argument('-t', '--trace-logs', default=False, action='store_true',
+                        help='Sets the logging level to trace (debug) in order to display more information in console')
+
     return parser.parse_args()
 
